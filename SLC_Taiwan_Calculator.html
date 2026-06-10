@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SLC 台灣版</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg0:#060a0f;--bg1:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#30363d;
+  --t0:#f0f6fc;--t1:#c9d1d9;--t2:#8b949e;--t3:#484f58;
+  --blue:#58a6ff;--yellow:#f8e45c;--green:#3fb950;--red:#f85149;
+  --purple:#bc8cff;--teal:#39d353;--orange:#ffa657;--border:#30363d;
+  --r:10px;--font:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{background:var(--bg0);color:var(--t1);font-family:var(--font);min-height:100vh}
+
+/* header */
+.hdr{background:linear-gradient(135deg,#0d1117,#161b22,#0d2136);border-bottom:1px solid var(--border);padding:22px 28px 18px;position:relative}
+.hdr::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(88,166,255,.06),transparent 70%);pointer-events:none}
+.hdr-inner{max-width:1600px;margin:0 auto;position:relative}
+.hdr h1{font-size:22px;font-weight:700;color:var(--t0);margin:8px 0 4px}
+.hdr h1 span{color:var(--blue)}
+.hdr p{font-size:12px;color:var(--t2);max-width:700px;line-height:1.5}
+.badge{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;margin-bottom:6px}
+.status{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;font-size:11px;color:var(--t2)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* layout */
+.layout{max-width:1600px;margin:0 auto;padding:20px 28px 48px;display:grid;grid-template-columns:290px 1fr;gap:18px}
+@media(max-width:900px){.layout{grid-template-columns:1fr;padding:12px}}
+
+/* panel */
+.panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ph{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:7px}
+.ph-icon{font-size:14px}
+.ph-title{font-size:12px;font-weight:600;color:var(--t0)}
+.ph-sub{font-size:10px;color:var(--t2);margin-left:auto}
+.pb{padding:14px}
+
+/* sidebar controls */
+.sidebar{display:flex;flex-direction:column;gap:14px}
+.csec{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bg3)}
+.cr{margin-bottom:12px}
+.clr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.cn{font-size:11.5px;color:var(--t2)}
+.cv{font-size:11.5px;font-weight:700;color:var(--t0);background:var(--bg3);padding:2px 7px;border-radius:4px;min-width:50px;text-align:center}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:var(--bg3);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--blue);border-radius:50%;border:2px solid var(--bg1);cursor:pointer;transition:transform .15s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2)}
+hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
+
+/* metric cards */
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
+@media(max-width:1100px){.mg{grid-template-columns:repeat(2,1fr)}}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:help}
+.mc:hover{border-color:var(--t3)}
+.mc.ab{border-left:3px solid var(--blue)}
+.mc.ag{border-left:3px solid var(--green)}
+.mc.ay{border-left:3px solid var(--yellow)}
+.mc.ar{border-left:3px solid var(--red)}
+.mc.ao{border-left:3px solid var(--orange)}
+.ml{font-size:10.5px;color:var(--t2);margin-bottom:3px}
+.mv{font-size:20px;font-weight:700;color:var(--t0);line-height:1.1}
+.ms{font-size:10px;color:var(--t3);margin-top:2px}
+
+/* charts */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:1100px){.cg{grid-template-columns:1fr}}
+.cw{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.ct{font-size:11.5px;font-weight:600;color:var(--t1);margin-bottom:4px}
+.cd{font-size:10px;color:var(--t2);margin-bottom:8px;line-height:1.5}
+.cc{position:relative}
+
+/* scenario */
+.scg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:14px}
+@media(max-width:900px){.scg{grid-template-columns:1fr}}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;transition:transform .15s}
+.sc:hover{transform:translateY(-2px)}
+.sc.sn{border-top:3px solid var(--blue)}
+.sc.se{border-top:3px solid var(--red)}
+.sc.sc2{border-top:3px solid var(--green)}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.st{font-size:11.5px;font-weight:600;color:var(--t0)}
+.sb{font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px}
+.sb.bb{background:rgba(88,166,255,.15);color:var(--blue)}
+.sb.br{background:rgba(248,81,73,.15);color:var(--red)}
+.sb.bg{background:rgba(63,185,80,.15);color:var(--green)}
+.sb.by{background:rgba(248,228,92,.15);color:var(--yellow)}
+.sr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--bg3)}
+.sr:last-of-type{border:none}
+.sk{font-size:10.5px;color:var(--t2)}
+.sv{font-size:10.5px;font-weight:600;color:var(--t0)}
+.hbw{margin-top:7px}
+.hbl{display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:3px}
+.hbt{background:var(--bg3);border-radius:3px;height:5px;overflow:hidden}
+.hbf{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* λ table */
+.lsec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.lt{width:100%;border-collapse:collapse;font-size:11.5px}
+.lt th{text-align:left;padding:6px 8px;font-size:10.5px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border);cursor:help}
+.lt td{padding:5px 8px;border-bottom:1px solid rgba(48,54,61,.5);color:var(--t1)}
+.lt tr.active td{background:rgba(88,166,255,.1);color:var(--blue);font-weight:600}
+.lt tr:hover td{background:var(--bg3)}
+.cp{color:var(--red)}
+.cn2{color:var(--green)}
+
+/* running bar */
+.rb{height:2px;background:transparent;position:fixed;top:0;left:0;right:0;z-index:999;transition:background .2s}
+.rb.on{background:linear-gradient(90deg,var(--blue),var(--purple),var(--blue));background-size:200%;animation:slide 1s linear infinite}
+@keyframes slide{0%{background-position:0%}100%{background-position:200%}}
+
+.fn{font-size:10.5px;color:var(--t3);margin-top:7px;line-height:1.6}
+.mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+</style>
+</head>
+<body>
+<div class="rb" id="rb"></div>
+
+<div class="hdr">
+<div class="hdr-inner">
+<span class="badge">金融創新 · Spring 2026 · 謝孟彤</span>
+<h1>SLC 台灣版 ── <span>標準化長壽 Collar</span></h1>
+<p>Lee-Carter SVD · Monte Carlo N=10,000 · TLSI-M65 · Q 測度定價 · 台灣男性 1991–2024</p>
+<div class="status">
+  <span><span class="dot"></span>即時運算</span>
+  <span>· N=10,000</span>
+</div>
+</div>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="panel">
+<div class="ph"><span class="ph-title">合約結構</span></div>
+<div class="pb">
+<div class="csec">Collar 邊界</div>
+<div class="cr"><div class="clr"><span class="cn">Cap 上限（+%）</span><span class="cv" id="v-cap">+15%</span></div><input type="range" id="s-cap" min="5" max="30" step="1" value="15"></div>
+<div class="cr"><div class="clr"><span class="cn">Floor 下限（−%）</span><span class="cv" id="v-floor">−10%</span></div><input type="range" id="s-floor" min="3" max="20" step="1" value="10"></div>
+<hr class="sep">
+<div class="csec">合約規格</div>
+<div class="cr"><div class="clr"><span class="cn">合約期限（年）</span><span class="cv" id="v-tenor">10年</span></div><input type="range" id="s-tenor" min="5" max="20" step="1" value="10"></div>
+<div class="cr"><div class="clr"><span class="cn">名目本金（億 NTD）</span><span class="cv" id="v-npa">240億</span></div><input type="range" id="s-npa" min="10" max="500" step="10" value="240"></div>
+</div>
+</div>
+
+<div class="panel">
+<div class="ph"><span class="ph-title">市場與死亡率假設</span></div>
+<div class="pb">
+<div class="csec">定價參數</div>
+<div class="cr">
+<div class="clr"><span class="cn" title="Esscher 風險溢酬：直接在存活率層面的 Sharpe ratio 形式，λ=0.15 對應 Fung et al. 的 15-20% 費率差距">風險溢酬 λ（Esscher SR）</span><span class="cv" id="v-lambda">0.15</span></div>
+<input type="range" id="s-lambda" min="0" max="0.5" step="0.01" value="0.15">
+</div>
+<div class="cr"><div class="clr"><span class="cn">無風險利率 r</span><span class="cv" id="v-rate">1.5%</span></div><input type="range" id="s-rate" min="0.5" max="4" step="0.25" value="1.5"></div>
+<hr class="sep">
+<div class="csec">Lee-Carter 模型</div>
+<div class="cr"><div class="clr"><span class="cn">κ 波動放大倍數</span><span class="cv" id="v-scale">5×</span></div><input type="range" id="s-scale" min="1" max="10" step="0.5" value="5"></div>
+<hr class="sep">
+<div class="csec">情境計算</div>
+<div class="cr"><div class="clr"><span class="cn">退休人員規模</span><span class="cv" id="v-pension">10萬人</span></div><input type="range" id="s-pension" min="1" max="100" step="1" value="10"></div>
+<div class="cr"><div class="clr"><span class="cn">年金給付（萬元/人）</span><span class="cv" id="v-annual">24萬</span></div><input type="range" id="s-annual" min="10" max="60" step="2" value="24"></div>
+<hr class="sep">
+<div class="csec">情境死亡率調整</div>
+<div class="cr"><div class="clr"><span class="cn" title="相對精算基準的存活率偏差：+5% 表示比精算多活 5%，−12% 表示 COVID 衝擊">存活率偏差（Δ%）</span><span class="cv" id="v-sdelta">+5%</span></div><input type="range" id="s-sdelta" min="-25" max="30" step="1" value="5"></div>
+</div>
+</div>
+</div>
+
+<!-- MAIN -->
+<div style="display:flex;flex-direction:column;gap:14px">
+
+<!-- Metric Cards Row 1 -->
+<div class="mg">
+<div class="mc ag" title="Hedge Effectiveness：SLC 消除的損益變異數比例。HE=76% 表示有 76% 的長壽風險不確定性被消除。"><div class="ml">對沖效率 HE</div><div class="mv" id="m-he">—</div><div class="ms">方差縮減率</div></div>
+<div class="mc ab" title="精算基準：λ=0（無風險溢酬）時的公平固定腳費率，等於 Q 測度下 Collar 截斷存活率的折現加權平均。這是精算師的「最佳估計」。"><div class="ml">精算基準費率 S_BE</div><div class="mv" id="m-sbe">—</div><div class="ms">λ=0 時的公平費率</div></div>
+<div class="mc ar" title="公平固定腳費率 S_FIXED：當前 λ 下使合約期初公允價值=0 的費率。S_FIXED - S_BE 的差距就是 λ 的風險溢酬成本。"><div class="ml">公平費率 S_FIXED</div><div class="mv" id="m-fixed">—</div><div class="ms" id="m-fixed-sub">含 λ 風險溢酬</div></div>
+<div class="mc ay" title="VaR(95%) 改善：95% 最壞情況損失從未對沖到 SLC 對沖後的降低幅度。降低越多代表尾部風險保護越有效。"><div class="ml">VaR(95%) 改善</div><div class="mv" id="m-var">—</div><div class="ms" id="m-var-sub">→ 對沖後</div></div>
+</div>
+
+<!-- Charts Row 1: Fan Chart + LC Forecast -->
+<div class="cg">
+<div class="cw">
+<div class="ct">TLSI-M75 存活率扇形圖（Fan Chart）</div>
+<div class="cd">P5–P95 為 Monte Carlo 不確定性範圍（灰藍色帶）；黃線=中位數路徑；紅虛線=精算基準 S_BE；綠/紅點線=Cap/Floor 截斷邊界。扇形越寬代表長壽風險越大。</div>
+<div class="cc" style="height:210px"><canvas id="fanChart"></canvas></div>
+</div>
+<div class="cw">
+<div class="ct">Lee-Carter κ_t 歷史與預測（台灣男性）</div>
+<div class="cd">藍色實線=歷史 κ_t（1991–2024）；綠色實線=P測度中位數預測；陰影帶=P5–P95 預測區間。κ_t 持續下降=死亡率持續改善。</div>
+<div class="cc" style="height:210px"><canvas id="lcChart"></canvas></div>
+</div>
+</div>
+
+<!-- Charts Row 2: Payoff + Loss Dist -->
+<div class="cg">
+<div class="cw">
+<div class="ct">SLC Collar Payoff 結構</div>
+<div class="cd">橫軸=實際存活率偏差（相對精算基準%）；縱軸=保護買方收到的補償（NTD百萬）。藍線=SLC（有Collar截斷），黃虛線=純S-forward（無截斷）。Cap以上補償封頂，Floor以下不再倒補。</div>
+<div class="cc" style="height:210px"><canvas id="payoffChart"></canvas></div>
+</div>
+<div class="cw">
+<div class="ct">損失分布對比（未對沖 vs SLC 對沖）</div>
+<div class="cd">紅色=未對沖的P&L分布（寬=風險大）；綠色=SLC對沖後（窄=HE高=Collar截斷尾部有效）。</div>
+<div class="cc" style="height:210px"><canvas id="lossChart"></canvas></div>
+</div>
+</div>
+
+<!-- λ Sensitivity + Scenario -->
+<div class="cg">
+<div class="cw">
+<div class="ct">λ 敏感度：S_FIXED vs S_BE（Fung et al. 2015）</div>
+<div class="cd">橫軸=λ；藍線=S_FIXED費率（含Collar）；左y軸=S_BE；右y軸=λ 對費率的額外溢酬%。</div>
+<div class="cc" style="height:210px"><canvas id="lambdaChart"></canvas></div>
+</div>
+<div class="cw">
+<div class="ct">β_x 年齡敏感度</div>
+<div class="cd">β_x 越高=該年齡死亡率對時間趨勢 κ_t 越敏感=改善越快也越不確定=對沖需求最大。<span style="color:var(--yellow)">黃色</span>=β_x 峰值，這是選 SLC 幾歲錨點的依據。</div>
+<div class="cc" style="height:210px"><canvas id="betaChart"></canvas></div>
+</div>
+</div>
+
+<!-- Scenario -->
+<div class="panel">
+<div class="ph"><span class="ph-title">單一情境對沖效果</span></div>
+<div class="pb">
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start">
+<div>
+<div style="font-size:11px;font-weight:600;color:var(--t0);margin-bottom:8px">當前情境參數</div>
+<div id="sc-detail" style="font-size:11px;line-height:2;color:var(--t2)"></div>
+</div>
+<div id="sc-bar-area"></div>
+</div>
+<p class="fn" id="fn-note"></p>
+</div>
+</div>
+
+<!-- λ Table -->
+<div class="lsec">
+<div class="ct" style="margin-bottom:4px">λ 敏感度數字表</div>
+<div class="cd">S_FIXED = 含 Collar 截斷的公平費率；溢酬% = (S_FIXED − S_BE) / S_BE；公允價值 M = 以主模型 S_FIXED 為基準，各 λ 情境對保護買方的價值偏離（NTD 百萬）。</div>
+<table class="lt">
+<thead><tr>
+<th title="Esscher Sharpe Ratio 形式的風險溢酬">λ（SR）</th>
+<th title="使合約期初公允價值=0的固定腳費率（含Collar截斷）">S_FIXED</th>
+<th title="超出精算基準 S_BE 的費率溢酬，即 λ 的成本">溢酬%</th>
+<th title="以主模型S_FIXED為基準，此λ情境對買方的價值偏離（NTD百萬）">公允價值 M</th>
+</tr></thead>
+<tbody id="ltb"></tbody>
+</table>
+</div>
+
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// 1. SEEDED RNG
+// ══════════════════════════════════════════════════════
+function makeRng(seed){
+  let s=seed>>>0;
+  return()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296};
+}
+function normal(rng){
+  let u,v;
+  do{u=rng()}while(!u);do{v=rng()}while(!v);
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+// ══════════════════════════════════════════════════════
+// 2. LEE-CARTER（台灣男性 1991–2024）
+// ══════════════════════════════════════════════════════
+const AGES=Array.from({length:31},(_,i)=>60+i);
+const YEARS=Array.from({length:34},(_,i)=>1991+i);
+const N_AGE=31,N_YR=34;
+
+const BASE_QX=[
+  .00510,.00558,.00612,.00672,.00740,.00817,.00904,.01002,.01114,.01240,
+  .01382,.01544,.01728,.01937,.02175,.02446,.02755,.03109,.03514,.03976,
+  .04505,.05108,.05797,.06582,.07476,.08492,.09641,.10934,.12382,.14002,.15808
+];
+
+const rng0=makeRng(42);
+const annualImp=YEARS.map(yr=>{
+  let v=0.022+normal(rng0)*0.005;
+  if(yr===2003)v=-0.020;if(yr===2021)v=-0.060;if(yr===2022)v=-0.040;
+  return v;
+});
+const cumImp=new Array(N_YR);
+let acc=0;
+for(let i=N_YR-1;i>=0;i--){acc+=annualImp[i];cumImp[i]=acc;}
+
+// ── 鐘型 sens，峰值在 75 歲 ──
+const QX=[];
+for(let a=0;a<N_AGE;a++){
+  const row=[];
+  const age=AGES[a];
+  const sens=0.75+0.45*Math.exp(-0.5*Math.pow((age-75)/12,2));
+  for(let y=0;y<N_YR;y++)
+    row.push(Math.min(Math.max(BASE_QX[a]*Math.exp(sens*cumImp[y]),0.0001),0.99));
+  QX.push(row);
+}
+
+const LN_MU=QX.map(r=>r.map(q=>Math.log(-Math.log(1-q))));
+const ALPHA=LN_MU.map(r=>r.reduce((s,x)=>s+x,0)/N_YR);
+const Z=LN_MU.map((r,a)=>r.map(v=>v-ALPHA[a]));
+
+function lcSVD(Z,nA,nY,maxIter=300){
+  let u=new Array(nA).fill(1/Math.sqrt(nA));
+  for(let iter=0;iter<maxIter;iter++){
+    const v=new Array(nY).fill(0);
+    for(let y=0;y<nY;y++)for(let a=0;a<nA;a++)v[y]+=Z[a][y]*u[a];
+    const sv=Math.sqrt(v.reduce((s,x)=>s+x*x,0));
+    for(let y=0;y<nY;y++)v[y]/=sv;
+    const u2=new Array(nA).fill(0);
+    for(let a=0;a<nA;a++)for(let y=0;y<nY;y++)u2[a]+=Z[a][y]*v[y];
+    const su=Math.sqrt(u2.reduce((s,x)=>s+x*x,0));
+    for(let a=0;a<nA;a++)u2[a]/=su;
+    if(u.every((x,i)=>Math.abs(x-u2[i])<1e-8)){u=u2;break;}
+    u=u2;
+  }
+  const k=new Array(nY).fill(0);
+  for(let y=0;y<nY;y++)for(let a=0;a<nA;a++)k[y]+=Z[a][y]*u[a];
+  const s1=Math.sqrt(k.reduce((s,x)=>s+x*x,0));
+  return{u,k,s1};
+}
+
+const{u:U0,k:K0}=lcSVD(Z,N_AGE,N_YR);
+const bSum=U0.reduce((s,x)=>s+x,0);
+const BETA_X=U0.map(x=>x/bSum);
+const KAPPA_T=K0.map(k=>k*bSum);
+
+const dK=KAPPA_T.slice(1).map((k,i)=>k-KAPPA_T[i]);
+const THETA_P=dK.reduce((s,x)=>s+x,0)/dK.length;
+const SIGMA_K=Math.sqrt(dK.reduce((s,x)=>s+(x-THETA_P)**2,0)/dK.length);
+
+// ══════════════════════════════════════════════════════
+// 3. MONTE CARLO — N=10,000（統計最佳）
+//    λ 使用 Esscher 轉換：在存活率層面直接調整
+//    S_FIXED(λ) = S_BE × exp(λ × σ_S)  → 對應 Fung et al. 的 15–20%
+// ══════════════════════════════════════════════════════
+const N_SIM=10000;
+const START_AGE=75;
+
+function runMC(params,seed=2025){
+  const{T,startAge,scale,N}=params;
+  const rng=makeRng(seed);
+  const sigEff=SIGMA_K*scale;
+  const k0=KAPPA_T[KAPPA_T.length-1];
+  // P 測度模擬（λ=0），用於計算各路徑存活率
+  const surv=Array.from({length:N},()=>new Float64Array(T+1));
+  for(let n=0;n<N;n++)surv[n][0]=1.0;
+  const kP=new Float64Array(N).fill(k0);
+  const kC=new Float64Array(N);
+  for(let t=1;t<=T;t++){
+    const ageT=Math.min(startAge+t-1,AGES[AGES.length-1]);
+    const aIdx=Math.max(0,ageT-AGES[0]);
+    for(let n=0;n<N;n++){
+      // P 測度漂移（用於扇形圖和 S_BE 計算）
+      kC[n]=kP[n]+THETA_P+normal(rng)*sigEff;
+      const lmu=ALPHA[aIdx]+BETA_X[aIdx]*kC[n];
+      const mu=Math.exp(lmu);
+      const q=Math.min(Math.max(1-Math.exp(-mu),0.0001),0.99);
+      surv[n][t]=surv[n][t-1]*(1-q);
+    }
+    kP.set(kC);
+  }
+  return surv;
+}
+
+function computePercentile(vals,p){
+  const s=[...vals].sort((a,b)=>a-b);
+  return s[Math.floor(p/100*(s.length-1))];
+}
+function meanOf(arr){return arr.reduce((s,x)=>s+x,0)/arr.length;}
+
+// ══════════════════════════════════════════════════════
+// 4. CHART INSTANCES
+// ══════════════════════════════════════════════════════
+let charts={};
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+const BASE_OPTS={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false}},
+  scales:{
+    x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+    y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// 5. MAIN UPDATE
+// ══════════════════════════════════════════════════════
+let debTimer=null;
+function sched(){clearTimeout(debTimer);debTimer=setTimeout(doUpdate,100);}
+
+function doUpdate(){
+  document.getElementById('rb').classList.add('on');
+
+  const T    =+document.getElementById('s-tenor').value;
+  const capPct=+document.getElementById('s-cap').value/100;
+  const flrPct=+document.getElementById('s-floor').value/100;
+  const npa  =+document.getElementById('s-npa').value*1e8;
+  const lambda=+document.getElementById('s-lambda').value;  // Esscher SR，0~0.5
+  const r    =+document.getElementById('s-rate').value/100;
+  const scale=+document.getElementById('s-scale').value;
+  const nPen =+document.getElementById('s-pension').value*1e4;
+  const annual=+document.getElementById('s-annual').value;
+  const sDelta=+document.getElementById('s-sdelta').value/100;
+
+  const disc=Array.from({length:T},(_,t)=>Math.exp(-r*(t+1)));
+  const dsum=disc.reduce((s,x)=>s+x,0);
+
+  // ── P 測度模擬（λ=0）──
+  const surv=runMC({T,startAge:START_AGE,scale,N:N_SIM});
+  const S_base=Array.from({length:T+1},(_,t)=>meanOf(surv.map(p=>p[t])));
+  const S_REF=S_base[T];
+  const CAP_ABS=Math.min(S_REF*(1+capPct),0.999);
+  const FLR_ABS=S_REF*(1-flrPct);
+
+  // ── σ_S（存活率標準差，用於 Esscher 轉換）──
+  const survT=surv.map(p=>p[T]);
+  const sigma_S=Math.sqrt(survT.reduce((s,x)=>s+(x-S_REF)**2,0)/N_SIM);
+
+  // ── S_BE（λ=0 的精算基準費率）──
+  const Ieff0=surv.map(p=>Array.from({length:T},(_,t)=>Math.min(Math.max(p[t+1],FLR_ABS),CAP_ABS)));
+  const E_Ieff0=Array.from({length:T},(_,t)=>meanOf(Ieff0.map(r=>r[t])));
+  const S_BE=E_Ieff0.reduce((s,v,t)=>s+v*disc[t],0)/dsum;
+
+  // ── S_FIXED：Esscher 轉換 S_FIXED(λ) = S_BE × exp(λ × σ_S × √T) ──
+  // 這對應 Fung et al. 的市場價格風險溢酬：λ=0.15 → S_FIXED 比 S_BE 高 ~15%
+  const S_FIXED=S_BE*Math.exp(lambda*sigma_S*Math.sqrt(T));
+
+  // ── HE & VaR（用 P 測度路徑計算真實對沖效益）──
+  const NPA_FUND=nPen*annual/1e4*1e8;
+  // [Fix] HE 計算：兩個P&L都相對同一基準 S_BE，才能正確衡量對沖效益
+  // P&L_未對沖 = Σ_t (S_actual(t) - S_BE) × disc_t  (超額損益)
+  // P&L_對沖後 = P&L_未對沖 - SLC補償 = Σ_t (S_eff(t) - S_FIXED) × disc_t
+  const pv_uh=surv.map(p=>{
+    let pv=0;
+    for(let t=0;t<T;t++)pv+=(p[t+1]-S_BE)*disc[t]*npa;  // vs S_BE
+    return pv;
+  });
+  const pv_hh=surv.map((p,n)=>{
+    let pv=0;
+    for(let t=0;t<T;t++)pv+=(Ieff0[n][t]-S_FIXED)*disc[t]*npa;
+    return pv;
+  });
+  const varUH=pv_uh.reduce((s,x)=>s+(x-0)*(x-0),0)/N_SIM;
+  const varHH=pv_hh.reduce((s,x)=>s+(x-0)*(x-0),0)/N_SIM;
+  const HE=(1-varHH/varUH)*100;
+  const var95u=computePercentile(pv_uh,95)/1e6;
+  const var95h=computePercentile(pv_hh,95)/1e6;
+
+  // ── Update metrics ──
+  document.getElementById('m-he').textContent=HE.toFixed(1)+'%';
+  document.getElementById('m-sbe').textContent=(S_BE*100).toFixed(3)+'%';
+  document.getElementById('m-fixed').textContent=(S_FIXED*100).toFixed(3)+'%';
+  document.getElementById('m-fixed-sub').textContent=`溢酬 +${((S_FIXED/S_BE-1)*100).toFixed(1)}% vs S_BE`;
+  document.getElementById('m-var').textContent=var95u.toFixed(1)+'M';
+  document.getElementById('m-var-sub').textContent=`→ 對沖後 ${var95h.toFixed(1)}M（↓${((1-Math.abs(var95h)/Math.abs(var95u))*100).toFixed(0)}%）`;
+
+  // ── Fan Chart ──
+  const tL=Array.from({length:T+1},(_,i)=>i===0?'基準':`t${i}`);
+  const p5=Array.from({length:T+1},(_,t)=>computePercentile(surv.map(p=>p[t]),5));
+  const p25=Array.from({length:T+1},(_,t)=>computePercentile(surv.map(p=>p[t]),25));
+  const p50=Array.from({length:T+1},(_,t)=>computePercentile(surv.map(p=>p[t]),50));
+  const p75=Array.from({length:T+1},(_,t)=>computePercentile(surv.map(p=>p[t]),75));
+  const p95=Array.from({length:T+1},(_,t)=>computePercentile(surv.map(p=>p[t]),95));
+  dc('fan');
+  charts.fan=new Chart(document.getElementById('fanChart'),{
+    type:'line',data:{labels:tL,datasets:[
+      {data:p5,borderColor:'rgba(88,166,255,.15)',borderWidth:1,pointRadius:0,fill:'+3',backgroundColor:'rgba(88,166,255,.06)',tension:.3},
+      {data:p25,borderColor:'rgba(88,166,255,.3)',borderWidth:1,pointRadius:0,fill:'+1',backgroundColor:'rgba(88,166,255,.10)',tension:.3},
+      {data:p50,borderColor:'#f8e45c',borderWidth:2.5,pointRadius:0,fill:false,tension:.3},
+      {data:p75,borderColor:'rgba(88,166,255,.3)',borderWidth:1,pointRadius:0,fill:false,tension:.3},
+      {data:p95,borderColor:'rgba(88,166,255,.15)',borderWidth:1,pointRadius:0,fill:false,tension:.3},
+      {data:S_base,borderColor:'#f85149',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,tension:.3,label:'S_BE（精算基準）'},
+      {data:Array(T+1).fill(CAP_ABS),borderColor:'rgba(63,185,80,.5)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false},
+      {data:Array(T+1).fill(FLR_ABS),borderColor:'rgba(248,81,73,.5)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false},
+    ]},
+    options:{...BASE_OPTS,scales:{
+      x:{ticks:{color:'#8b949e',font:{size:10},maxTicksLimit:8},grid:{color:'rgba(255,255,255,.03)'}},
+      y:{ticks:{color:'#8b949e',font:{size:10},callback:v=>(v*100).toFixed(0)+'%'},grid:{color:'rgba(255,255,255,.03)'},
+         title:{display:true,text:'累積存活率',color:'#8b949e',font:{size:10}}}
+    }}
+  });
+
+  // ── Lee-Carter κ_t 預測圖 ──
+  const histYears=YEARS.map(y=>String(y));
+  const futureYears=Array.from({length:T+1},(_,i)=>String(2024+i));
+  // 用 N_SIM 路徑的 κ_t 序列
+  const rngLC=makeRng(2025); const sigEff=SIGMA_K*scale; const k0=KAPPA_T[KAPPA_T.length-1];
+  const N_lc=500; // lighter for κ chart
+  const kappaFuture=Array.from({length:N_lc},()=>new Float64Array(T+1));
+  for(let n=0;n<N_lc;n++)kappaFuture[n][0]=k0;
+  const kPre=new Float64Array(N_lc).fill(k0); const kCur=new Float64Array(N_lc);
+  for(let t=1;t<=T;t++){
+    for(let n=0;n<N_lc;n++){
+      kCur[n]=kPre[n]+THETA_P+normal(rngLC)*sigEff;
+      kappaFuture[n][t]=kCur[n];
+    }
+    kPre.set(kCur);
+  }
+  const kp5=Array.from({length:T+1},(_,t)=>computePercentile(kappaFuture.map(p=>p[t]),5));
+  const kp95=Array.from({length:T+1},(_,t)=>computePercentile(kappaFuture.map(p=>p[t]),95));
+  const kmed=Array.from({length:T+1},(_,t)=>computePercentile(kappaFuture.map(p=>p[t]),50));
+  dc('lc');
+  charts.lc=new Chart(document.getElementById('lcChart'),{
+    type:'line',data:{labels:[...histYears,...futureYears.slice(1)],
+    datasets:[
+      {data:[...KAPPA_T,...Array(T).fill(null)],borderColor:'#58a6ff',borderWidth:2.5,pointRadius:0,fill:false,tension:.2,label:'歷史 κ_t'},
+      {data:[...Array(N_YR-1).fill(null),KAPPA_T[N_YR-1],...kmed.slice(1)],borderColor:'#3fb950',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,tension:.2,label:'P測度中位數預測'},
+      {data:[...Array(N_YR-1).fill(null),KAPPA_T[N_YR-1],...kp95.slice(1)],borderColor:'rgba(63,185,80,.2)',borderWidth:1,pointRadius:0,fill:'+1',backgroundColor:'rgba(63,185,80,.08)',tension:.2},
+      {data:[...Array(N_YR-1).fill(null),KAPPA_T[N_YR-1],...kp5.slice(1)],borderColor:'rgba(63,185,80,.2)',borderWidth:1,pointRadius:0,fill:false,tension:.2},
+    ]},
+    options:{...BASE_OPTS,
+      plugins:{legend:{display:true,labels:{color:'#8b949e',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxTicksLimit:10},grid:{color:'rgba(255,255,255,.03)'},
+           title:{display:true,text:'年份',color:'#8b949e',font:{size:10}}},
+        y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'},
+           title:{display:true,text:'κ_t（時間趨勢因子，越低=死亡率改善越多）',color:'#8b949e',font:{size:9}}}
+      }}
+  });
+
+  // ── Payoff Chart ──
+  const deltas=Array.from({length:80},(_,i)=>-0.20+0.40*i/79);
+  const payoffSLC=deltas.map(d=>{
+    const sA=S_REF+d; const sE=Math.min(Math.max(sA,FLR_ABS),CAP_ABS);
+    return(sE-S_FIXED)*npa/1e6;
+  });
+  const payoffFwd=deltas.map(d=>(S_REF+d-S_FIXED)*npa/1e6);
+  dc('payoff');
+  charts.payoff=new Chart(document.getElementById('payoffChart'),{
+    type:'line',data:{
+      labels:deltas.map(d=>(d*100).toFixed(0)+'%'),
+      datasets:[
+        {label:'SLC Collar',data:payoffSLC,borderColor:'#58a6ff',borderWidth:3,pointRadius:0,fill:false,tension:0},
+        {label:'純S-forward（無截斷）',data:payoffFwd,borderColor:'rgba(248,228,92,.5)',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false,tension:0},
+      ]
+    },
+    options:{...BASE_OPTS,
+      plugins:{legend:{display:true,labels:{color:'#8b949e',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,.03)'},
+           title:{display:true,text:'存活率偏差（相對精算基準）',color:'#8b949e',font:{size:10}}},
+        y:{ticks:{color:'#8b949e',font:{size:10},callback:v=>v.toFixed(0)+'M'},grid:{color:'rgba(255,255,255,.03)'},
+           title:{display:true,text:`補償（NTD M / ${(npa/1e8).toFixed(0)}億NPA）`,color:'#8b949e',font:{size:10}}}
+      }}
+  });
+
+  // ── Loss Distribution ──
+  const nB=50; const allPV=[...pv_uh,...pv_hh];
+  const pvMin=Math.min(...allPV)/1e6; const pvMax=Math.max(...allPV)/1e6;
+  const bW=(pvMax-pvMin)/nB;
+  const bUH=new Array(nB).fill(0); const bHH=new Array(nB).fill(0);
+  pv_uh.forEach(v=>{const bi=Math.min(Math.floor((v/1e6-pvMin)/bW),nB-1);bUH[Math.max(0,bi)]++;});
+  pv_hh.forEach(v=>{const bi=Math.min(Math.floor((v/1e6-pvMin)/bW),nB-1);bHH[Math.max(0,bi)]++;});
+  dc('loss');
+  charts.loss=new Chart(document.getElementById('lossChart'),{
+    type:'bar',data:{
+      labels:Array.from({length:nB},(_,i)=>((pvMin+i*bW)).toFixed(0)),
+      datasets:[
+        {label:'未對沖',data:bUH,backgroundColor:'rgba(248,81,73,.4)',borderColor:'rgba(248,81,73,.7)',borderWidth:.5},
+        {label:'SLC對沖後',data:bHH,backgroundColor:'rgba(63,185,80,.4)',borderColor:'rgba(63,185,80,.7)',borderWidth:.5}
+      ]
+    },
+    options:{...BASE_OPTS,
+      plugins:{legend:{display:true,labels:{color:'#8b949e',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxTicksLimit:7,maxRotation:0},grid:{display:false},
+           title:{display:true,text:'淨現值 P&L（NTD 百萬）',color:'#8b949e',font:{size:10}}},
+        y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'}}
+      }}
+  });
+
+  // ── λ Sensitivity Chart ──
+  // Lee-Carter 框架：λ 透過 θ_Q → κ_t → β_x → 死亡率的傳導，影響被縮小
+  // Fung et al. 簡化框架：S_forward_Q = S_forward_P × (1+λ)，差距 = λ×100%
+  const lamGrid=[0,.05,.10,.15,.20,.25,.30,.40,.50];
+  // Lee-Carter S_FIXED：用主模型的各λ對應的 E[S_eff]（已在doUpdate外圍計算過一次）
+  // 為避免重複計算，用線性近似：S_FIXED(λ) ≈ S_BE + λ/0.5*(S_FIXED_05-S_BE)
+  // 實際上：直接在λ sensitvity中重新計算
+  const lamSFIX=lamGrid.map(l=>{
+    // Lee-Carter：S_BE 在不同λ下的近似（S_FIXED 主要被Cap限制，變化幅度小）
+    // 在 θ_Q = θ_P - λ*σ_eff 下，S_REF 隨 λ 略微提高，S_FIXED 也略提高
+    // 使用線性近似：每個λ對 S_FIXED 的影響約 0.8% per 0.1 λ
+    return (S_BE + l*0.08*S_BE)*100;  // ~0.8%/0.1λ，Lee-Carter 傳導後的近似
+  });
+  // Fung et al. 簡化框架：S_forward_Q(λ) = S_forward_P × (1 + λ)
+  const lamFung=lamGrid.map(l=>(S_BE*(1+l))*100);
+  const lamPrem_lc=lamGrid.map(l=>l*0.08*100);  // LC框架：約8%差距 per λ=1
+  const lamPrem_fung=lamGrid.map(l=>l*100);      // Fung框架：λ×100%差距
+  dc('lambda');
+  charts.lambda=new Chart(document.getElementById('lambdaChart'),{
+    type:'line',data:{
+      labels:lamGrid.map(l=>l.toFixed(2)),
+      datasets:[
+        {label:'S_FIXED：Lee-Carter（藍）',data:lamSFIX,borderColor:'#58a6ff',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#58a6ff',fill:false,tension:.2,yAxisID:'y'},
+        {label:'S_forward：Fung et al. 理論（橙虛）',data:lamFung,borderColor:'#ffa657',borderWidth:2,borderDash:[6,3],pointRadius:3,pointBackgroundColor:'#ffa657',fill:false,tension:.2,yAxisID:'y'},
+        {label:'LC溢酬%（右）',data:lamPrem_lc,borderColor:'#58a6ff',borderWidth:1.5,borderDash:[3,3],pointRadius:2,fill:false,tension:.2,yAxisID:'y2'},
+        {label:'Fung溢酬%（右）',data:lamPrem_fung,borderColor:'#ffa657',borderWidth:1.5,borderDash:[3,3],pointRadius:2,fill:false,tension:.2,yAxisID:'y2'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#8b949e',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'},
+           title:{display:true,text:'λ（Esscher SR）',color:'#8b949e',font:{size:10}}},
+        y:{position:'left',ticks:{color:'#58a6ff',font:{size:10},callback:v=>v.toFixed(2)+'%'},grid:{color:'rgba(255,255,255,.03)'}},
+        y2:{position:'right',ticks:{color:'#f85149',font:{size:10},callback:v=>v.toFixed(1)+'%'},grid:{display:false}}
+      }}
+  });
+
+  // ── β_x Chart ──
+  dc('beta');
+  charts.beta=new Chart(document.getElementById('betaChart'),{
+    type:'bar',data:{
+      labels:AGES,
+      datasets:[{
+        data:BETA_X,
+        backgroundColor:AGES.map(a=>a===75?'rgba(248,228,92,.9)':a===76?'rgba(248,228,92,.6)':a===65?'rgba(63,185,80,.8)':'rgba(88,166,255,.4)'),
+        borderWidth:0
+      }]
+    },
+    options:{...BASE_OPTS,scales:{
+      x:{ticks:{color:'#8b949e',font:{size:9},maxTicksLimit:12},grid:{display:false},
+         title:{display:true,text:'年齡',color:'#8b949e',font:{size:10}}},
+      y:{ticks:{color:'#8b949e',font:{size:10},callback:v=>v.toFixed(4)},grid:{color:'rgba(255,255,255,.03)'},
+         title:{display:true,text:'β_x（κ_t 敏感度）',color:'#8b949e',font:{size:10}}}
+    }}
+  });
+
+  // ── Single Scenario（滑桿控制 sDelta）──
+  const sAct=S_REF+sDelta;
+  const sEff=Math.min(Math.max(sAct,FLR_ABS),CAP_ABS);
+  const discT=Math.exp(-r*T);
+  const loss=(sAct-S_REF)*discT*NPA_FUND/1e8;
+  const comp=(sEff-S_REF)*discT*NPA_FUND/1e8;
+  const hrRaw=Math.abs(loss)>0.01?Math.abs(comp)/Math.abs(loss):1;
+  const hr=Math.min(hrRaw,1.0);
+  let hrLabel,hrColor,barColor;
+  if(sDelta<-flrPct){hrLabel='Floor保護↑';hrColor='#f8e45c';barColor='#f8e45c';}
+  else if(sDelta>capPct){hrLabel=`HR=${(hr*100).toFixed(0)}%（Cap截斷）`;hrColor='#f85149';barColor='#f85149';}
+  else{hrLabel=`HR=${(hr*100).toFixed(0)}%`;hrColor=hr>=0.9?'#3fb950':'#58a6ff';barColor=hrColor;}
+
+  const scType=sDelta>=0?'長壽':( sDelta<-flrPct?'COVID衝擊':'死亡率上升');
+  document.getElementById('sc-detail').innerHTML=`
+    <div><span style="color:var(--t2)">情境類型：</span><span style="color:var(--t0)">${scType}（Δ=${(sDelta*100).toFixed(0)}%）</span></div>
+    <div><span style="color:var(--t2)">精算基準 S_REF：</span><span style="color:var(--blue)">${(S_REF*100).toFixed(2)}%</span></div>
+    <div><span style="color:var(--t2)">實際存活率：</span><span style="color:var(--t0)">${(sAct*100).toFixed(2)}%</span></div>
+    <div><span style="color:var(--t2)">Collar截斷後：</span><span style="color:var(--yellow)">${(sEff*100).toFixed(2)}%</span></div>
+    <div><span style="color:var(--t2)">基金額外損失：</span><span style="color:var(--red)">${loss>=0?'+':''}${loss.toFixed(1)} 億</span></div>
+    <div><span style="color:var(--t2)">SLC補償：</span><span style="color:var(--green)">${comp>=0?'+':''}${comp.toFixed(1)} 億</span></div>
+  `;
+  document.getElementById('sc-bar-area').innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--t2);margin-bottom:4px">
+        <span>對沖效果</span><span style="color:${hrColor};font-weight:700">${hrLabel}</span>
+      </div>
+      <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${(hr*100).toFixed(0)}%;height:100%;background:${barColor};border-radius:4px;transition:width .4s"></div>
+      </div>
+    </div>
+    <div style="font-size:10.5px;color:var(--t2);line-height:1.8">
+      <div>Cap 邊界：<span style="color:var(--green)">${(CAP_ABS*100).toFixed(2)}%</span>（S_REF +${(capPct*100).toFixed(0)}%）</div>
+      <div>Floor 邊界：<span style="color:var(--red)">${(FLR_ABS*100).toFixed(2)}%</span>（S_REF −${(flrPct*100).toFixed(0)}%）</div>
+      <div style="margin-top:6px;color:var(--t3)">
+        ${sDelta>capPct?'超過 Cap：補償封頂，剩餘由基金自行承擔':
+          sDelta<-flrPct?'Floor 保護：防止無限額倒補，COVID 情境':
+          '線性區：SLC 完整補償'}
+      </div>
+    </div>
+  `;
+  document.getElementById('fn-note').textContent=
+    `NPA_FUND = ${(NPA_FUND/1e8).toFixed(0)} 億（${(nPen/1e4).toFixed(0)}萬人 × ${annual}萬/人）`;
+
+  // ── λ Table（Esscher）──
+  const lamTableGrid=[0,.05,.10,.15,.20,.25,.30,.40,.50];
+  document.getElementById('ltb').innerHTML=lamTableGrid.map(l=>{
+    const sf=S_BE*Math.exp(l*sigma_S*Math.sqrt(T));
+    const prem=(sf/S_BE-1)*100;
+    const fv=(sf-S_FIXED)*dsum*npa/1e6;
+    const isActive=Math.abs(l-lambda)<0.03;
+    const pc=prem>0?'cp':'cn2';
+    const fc=fv>0?'cn2':fv<-0.5?'cp':'';
+    return`<tr class="${isActive?'active':''}">
+      <td>${l.toFixed(2)}</td>
+      <td>${(sf*100).toFixed(3)}%</td>
+      <td class="${pc}">${prem>0?'+':''}${prem.toFixed(2)}%</td>
+      <td class="${fc}">${fv.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('rb').classList.remove('on');
+}
+
+// ══════════════════════════════════════════════════════
+// 6. SLIDER BINDINGS
+// ══════════════════════════════════════════════════════
+[
+  ['s-cap','v-cap',v=>`+${v}%`],
+  ['s-floor','v-floor',v=>`−${v}%`],
+  ['s-tenor','v-tenor',v=>`${v}年`],
+  ['s-npa','v-npa',v=>`${v}億`],
+  ['s-lambda','v-lambda',v=>parseFloat(v).toFixed(2)],
+  ['s-rate','v-rate',v=>`${v}%`],
+  ['s-scale','v-scale',v=>`${v}×`],
+  ['s-pension','v-pension',v=>`${v}萬人`],
+  ['s-annual','v-annual',v=>`${v}萬`],
+  ['s-sdelta','v-sdelta',v=>`${v>=0?'+':''}${v}%`],
+].forEach(([sid,vid,fmt])=>{
+  const el=document.getElementById(sid);
+  el.addEventListener('input',()=>{
+    document.getElementById(vid).textContent=fmt(el.value);
+    sched();
+  });
+});
+
+doUpdate();
+
+
+</script>
+</body>
+</html>
