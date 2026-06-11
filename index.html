@@ -154,7 +154,7 @@ hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
 <div class="pb">
 <div class="csec">定價參數</div>
 <div class="cr">
-<div class="clr"><span class="cn" title="Esscher 風險溢酬：直接在存活率層面的 Sharpe ratio 形式，λ=0.15 對應 Fung et al. 的 15-20% 費率差距">風險溢酬 λ（Esscher SR）</span><span class="cv" id="v-lambda">0.15</span></div>
+<div class="clr"><span class="cn" title="Esscher 風險溢酬：直接在存活率層面的 Sharpe ratio 形式，λ=0.15 對應 Fung et al. 的 15-20% 費率差距">風險溢酬 λ</span><span class="cv" id="v-lambda">0.15</span></div>
 <input type="range" id="s-lambda" min="0" max="0.5" step="0.01" value="0.15">
 </div>
 <div class="cr"><div class="clr"><span class="cn">無風險利率 r</span><span class="cv" id="v-rate">1.5%</span></div><input type="range" id="s-rate" min="0.5" max="4" step="0.25" value="1.5"></div>
@@ -186,7 +186,7 @@ hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
 <!-- Charts Row 1: Fan Chart + LC Forecast -->
 <div class="cg">
 <div class="cw">
-<div class="ct">TLSI-M65 存活率扇形圖（Fan Chart）</div>
+<div class="ct">TLSI-M65 存活率扇形圖</div>
 <div class="cd">P5–P95 為 Monte Carlo 不確定性範圍（灰藍色帶）；黃線=中位數路徑；紅虛線=精算基準 S_BE；綠/紅點線=Cap/Floor 截斷邊界。扇形越寬代表長壽風險越大。</div>
 <div class="cc" style="height:210px"><canvas id="fanChart"></canvas></div>
 </div>
@@ -214,7 +214,7 @@ hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
 <!-- λ Sensitivity + Scenario -->
 <div class="cg">
 <div class="cw">
-<div class="ct">λ 敏感度：S_FIXED vs S_BE（Fung et al. 2015）</div>
+<div class="ct">λ 敏感度：S_FIXED vs S_BE</div>
 <div class="cd">橫軸=λ；藍線=S_FIXED費率（含Collar）；左y軸=S_BE；右y軸=λ 對費率的額外溢酬%。</div>
 <div class="cc" style="height:210px"><canvas id="lambdaChart"></canvas></div>
 </div>
