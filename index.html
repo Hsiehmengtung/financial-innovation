@@ -125,7 +125,7 @@ hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
 <div class="hdr-inner">
 <span class="badge">金融創新 · Spring 2026 · 謝孟彤</span>
 <h1>SLC 台灣版 ── <span>標準化長壽 Collar</span></h1>
-<p>Lee-Carter SVD · Monte Carlo N=10,000 · TLSI-M65 · Q 測度定價 · 台灣男性 1991–2024</p>
+<p>Lee-Carter SVD · Monte Carlo N=10,000 · TLSI-M65 · Q 測度定價 1991–2024</p>
 <div class="status">
   <span><span class="dot"></span>即時運算</span>
   <span>· N=10,000</span>
@@ -191,7 +191,7 @@ hr.sep{border:none;border-top:1px solid var(--bg3);margin:8px 0}
 <div class="cc" style="height:210px"><canvas id="fanChart"></canvas></div>
 </div>
 <div class="cw">
-<div class="ct">Lee-Carter κ_t 歷史與預測（台灣男性）</div>
+<div class="ct">Lee-Carter κ_t 歷史與預測</div>
 <div class="cd">藍色實線=歷史 κ_t（1991–2024）；綠色實線=P測度中位數預測；陰影帶=P5–P95 預測區間。κ_t 持續下降=死亡率持續改善。</div>
 <div class="cc" style="height:210px"><canvas id="lcChart"></canvas></div>
 </div>
@@ -274,7 +274,7 @@ function normal(rng){
 }
 
 // ══════════════════════════════════════════════════════
-// 2. LEE-CARTER（台灣男性 1991–2024）
+// 2. LEE-CARTER（台灣 1991–2024）
 // ══════════════════════════════════════════════════════
 const AGES=Array.from({length:31},(_,i)=>60+i);
 const YEARS=Array.from({length:34},(_,i)=>1991+i);
